@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,6 +36,72 @@ namespace UsernameApp
             _filePath = filePath;
         }
 
-        
+        public async Task SaveItemAsync(User user)
+        {
+            if(string.IsNullOrWhiteSpace(user.Username))
+            {
+                throw new ArgumentException("username cannot be empty");
+            }
+
+            bool _newUser = _uniqueNames.Add(user.Username);
+            if(!_newUser)
+            {
+                throw new InvalidOperationException($"the username {user.Username} already exist");
+            }
+
+            _userLookup[user.Username] = user;
+
+            string rolesText = string.Join(",", user.Roles);
+            string lineToSave = $"{user.Username}|{rolesText}" + Environment.NewLine;
+            await File.AppendAllTextAsync(_filePath, lineToSave);
+
+        }
+
+        public async Task<List<User>> LoadAllItemsAsync()
+        {
+            List<User> loadedUsers = new List<User>();
+            if(!File.Exists(_filePath))
+            {
+                return loadedUsers;
+            }
+            string[] lines = await File.ReadAllLinesAsync(_filePath);
+
+            foreach(string line in lines)
+            {
+                if(string.IsNullOrWhiteSpace(line)) continue;
+                string[] parts = line.Split('|');
+                string username = parts[0];
+                string[] roles = parts.Length > 1 ? parts[1].Split(',') : new string[]{"member"};
+                _uniqueNames.Add(username);
+                User loadedUser  = new User(username, roles);
+
+                _userLookup[username] = loadedUser;
+                loadedUsers.Add(loadedUser);
+            }
+            return loadedUsers;
+        }
+
+        public List<string> GetUsernamesStartsWith(char letter)
+        {
+            var matchingNames = from name in _uniqueNames
+                                where name.StartsWith(letter.ToString(), StringComparison.OrdinalIgnoreCase)
+                                orderby name ascending
+                                select name;
+                return matchingNames.ToList();
+        }    
+    }
+
+    class Program
+    {
+        static async Task Main(string[] takingTerminalInputThroughArray)
+        {
+            UserStorageService storage = new UserStorageService("Database.txt");
+
+            List<User> existingUsers = await storage.LoadAllItemsAsync();
+            Console.WriteLine($"Loaded {existingUsers.Count} from Database.txt");
+            Console.Write("\nenter a new username: ");
+            string inputName = Console.ReadLine();
+            
+        }
     }
 }
