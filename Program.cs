@@ -38,6 +38,10 @@ namespace UsernameApp
 
         public async Task SaveItemAsync(User user)
         {
+            if(user == null || user.Roles.Length == 0)
+            {
+                throw new ArgumentNullException(nameof(user), " user object cannot be null.");
+            }
             if(string.IsNullOrWhiteSpace(user.Username))
             {
                 throw new ArgumentException("username cannot be empty");
@@ -102,7 +106,7 @@ namespace UsernameApp
             List<User> existingUsers = await storage.LoadAllItemsAsync();
             Console.WriteLine($"Loaded {existingUsers.Count} from Database.txt");
             Console.Write("\nenter a new username: ");
-            string inputName = Console.ReadLine();
+            string? inputName = Console.ReadLine();
 
             string[] defaultRoles = new string[] {"Developer", "Admin"};
             User newUser = new User(inputName, defaultRoles);
