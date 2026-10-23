@@ -43,18 +43,20 @@ namespace UsernameApp
                 throw new ArgumentException("username cannot be empty");
             }
 
-            bool _newUser = _uniqueNames.Add(user.Username);
-            if(!_newUser)
+            if(_uniqueNames.Contains(user.Username))
             {
                 throw new InvalidOperationException($"the username {user.Username} already exist");
             }
+            else
+            {            
+                string rolesText = string.Join(",", user.Roles);
+                string lineToSave = $"{user.Username}|{rolesText}" + Environment.NewLine;
+                await File.AppendAllTextAsync(_filePath, lineToSave);
+                
+                _uniqueNames.Add(user.Username);
+                _userLookup[user.Username] = user;
 
-            _userLookup[user.Username] = user;
-
-            string rolesText = string.Join(",", user.Roles);
-            string lineToSave = $"{user.Username}|{rolesText}" + Environment.NewLine;
-            await File.AppendAllTextAsync(_filePath, lineToSave);
-
+            }
         }
 
         public async Task<List<User>> LoadAllItemsAsync()
