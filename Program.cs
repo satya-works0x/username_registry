@@ -101,6 +101,31 @@ namespace UsernameApp
             Console.WriteLine($"Loaded {existingUsers.Count} from Database.txt");
             Console.Write("\nenter a new username: ");
             string inputName = Console.ReadLine();
+
+            string[] defaultRoles = new string[] {"Developer", "Admin"};
+            User newUser = new User(inputName, defaultRoles);
+
+            try
+            {
+                await storage.SaveItemAsync(newUser);
+                Console.WriteLine($"Success! '{newUser.Username}' saved to Database.txt");
+            
+            }
+            catch(ArgumentException ex)
+            {
+                Console.WriteLine($"[Input Error] : {ex.Message}");
+            }
+            catch(InvalidOperationException ex)
+            {
+                Console.WriteLine($"[Duplicate error] : {ex.Message}");
+            }
+            catch(IOException ex)
+            {
+                Console.WriteLine($"[Disk/file error] : {ex.Message}");
+            }
+
+            List<string> sUsers = storage.GetUsernamesStartsWith('s');
+            Console.WriteLine($"\nUsers starting with 'S': {string.Join(", ", sUsers)}");
             
         }
     }
